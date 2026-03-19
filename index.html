@@ -112,10 +112,8 @@
     </style>
 </head>
 <body>
-
-    <marquee scrollamount="5">☆★☆ カテゴリーとおすすめ機能を追加しました！(v2.0) ☆★☆</marquee>
+    <marquee scrollamount="5">☆★☆ 管理画面 - ニュースを登録してください ☆★☆</marquee>
     <h1 class="admin-title">◆◇◆ ニュース投稿フォーム ◆◇◆</h1>
-
     <div class="admin-container">
         <form id="news-form">
             <table>
@@ -156,11 +154,8 @@
                     <td><input type="text" id="youtube-id" placeholder="例: dQw4w9WgXcQ (動画がある場合)"></td>
                 </tr>
             </table>
-            <button type="submit" class="btn-submit">カキコする (送信)</button>
+            <button type="submit" class="btn-submit" id="submit-btn" disabled>データベース接続中...</button>
         </form>
-    </div>
-    <div style="margin-top: 30px; font-size: 12px; color: #00ffff;">
-        <p>Copyright (C) 200X News Admin. All Rights Reserved.</p>
     </div>
 
     <!-- 管理画面用メッセージボックス -->
@@ -169,89 +164,83 @@
         <button onclick="document.getElementById('msg-box').style.display='none'">OK</button>
     </div>
 
-    <!-- Firebase SDK (ES Modules) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let firebaseConfig = {
-            apiKey: "AIzaSyAcYxXbssrZmx0e8-9e2qy2C6ftX-X8ijg",
-            authDomain: "mediatest-v01c.firebaseapp.com",
-            projectId: "mediatest-v01c",
-            storageBucket: "mediatest-v01c.firebasestorage.app",
-            messagingSenderId: "1008340252538",
-            appId: "1:1008340252538:web:4b4613e10647053fc2c8c3",
-            measurementId: "G-GP9YH6WSJP"
+        // ⚠️【重要】ご自身のFirebaseプロジェクトの設定情報に置き換えてください
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
-
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-            firebaseConfig = JSON.parse(__firebase_config);
-        }
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        // 保存先のコレクション名（わかりやすく 'news' としています）
+        const newsCollectionPath = "news";
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-custom-news';
-        const newsCollectionPath = `artifacts/${appId}/public/data/news`;
+        const btn = document.getElementById('submit-btn');
+        let isReady = false;
 
         function showMessage(text) {
             document.getElementById('msg-text').innerText = text;
             document.getElementById('msg-box').style.display = 'block';
         }
 
+        // 認証状態の監視
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                isReady = true;
+                btn.disabled = false;
+                btn.innerText = "カキコする (送信)";
+            } else {
+                isReady = false;
+                btn.disabled = true;
+                btn.innerText = "認証エラー";
+            }
+        });
+
+        // 匿名認証でログイン（※Firestoreルールで要許可）
+        signInAnonymously(auth).catch((error) => {
+            console.error("認証エラー:", error);
+            showMessage("Firebaseの認証に失敗しました。設定を確認してください。");
+        });
+
         document.getElementById('news-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!auth.currentUser) return showMessage("認証待ちです。少し待ってからお試しください。");
-
-            const title = document.getElementById('title').value;
-            const category = document.getElementById('category').value;
-            const isRecommended = document.getElementById('is-recommended').checked;
-            const content = document.getElementById('content').value;
-            const imageUrl = document.getElementById('image-url').value;
-            const youtubeId = document.getElementById('youtube-id').value;
-            const btn = document.querySelector('.btn-submit');
+            if (!isReady) return showMessage("データベースの準備ができていません。");
 
             btn.disabled = true; 
             btn.innerText = "送信中...";
 
             try {
                 await addDoc(collection(db, newsCollectionPath), {
-                    title: title,
-                    category: category,
-                    isRecommended: isRecommended,
-                    content: content,
-                    imageUrl: imageUrl || null,
-                    youtubeId: youtubeId || null,
+                    title: document.getElementById('title').value,
+                    category: document.getElementById('category').value,
+                    isRecommended: document.getElementById('is-recommended').checked,
+                    content: document.getElementById('content').value,
+                    imageUrl: document.getElementById('image-url').value || null,
+                    youtubeId: document.getElementById('youtube-id').value || null,
                     createdAt: Date.now()
                 });
-                showMessage("★カキコ完了しました！閲覧画面に戻って確認してください。★");
+                showMessage("★カキコ完了しました！★");
                 document.getElementById('news-form').reset();
             } catch (error) {
-                showMessage("エラーが発生しました: " + error.message);
+                // ここでエラーが出る場合はFirestoreのセキュリティルールが原因の可能性が高いです
+                showMessage("送信エラー: 権限がないか設定が間違っています。(" + error.message + ")");
                 console.error("Firestore Add Error:", error);
             } finally {
                 btn.disabled = false; 
                 btn.innerText = "カキコする (送信)";
             }
         });
-
-        async function init() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const { signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("認証エラー:", error);
-                showMessage("システムに接続できませんでした。");
-            }
-        }
-
-        init();
     </script>
 </body>
 </html>
