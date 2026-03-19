@@ -72,6 +72,13 @@
             border: 2px inset #c0c0c0;
             font-family: "MS P Gothic", sans-serif;
         }
+
+        input[type="file"] {
+            width: 95%;
+            padding: 4px;
+            background-color: #ffffff;
+            border: 2px inset #c0c0c0;
+        }
         
         .btn-submit {
             background-color: #c0c0c0; 
@@ -112,8 +119,9 @@
     </style>
 </head>
 <body>
-    <marquee scrollamount="5">☆★☆ 管理画面 - ニュースを登録してください ☆★☆</marquee>
-    <h1 class="admin-title">◆◇◆ ニュース投稿フォーム ◆◇◆</h1>
+    <marquee scrollamount="5">管理画面 - ニュースを登録してください</marquee>
+    <h1 class="admin-title">ニュース投稿フォーム</h1>
+
     <div class="admin-container">
         <form id="news-form">
             <table>
@@ -133,11 +141,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>目立たせる！</th>
+                    <th>目立たせる</th>
                     <td>
                         <label>
                             <input type="checkbox" id="is-recommended" style="width: auto;"> 
-                            <b>✨「ピックアップ」欄に表示する</b>
+                            <b>「ピックアップ」欄に表示する</b>
                         </label>
                     </td>
                 </tr>
@@ -147,7 +155,11 @@
                 </tr>
                 <tr>
                     <th>画像URL</th>
-                    <td><input type="text" id="image-url" placeholder="http://... (写真がある場合)"></td>
+                    <td><input type="text" id="image-url" placeholder="http://... (直接URLを指定する場合)"></td>
+                </tr>
+                <tr>
+                    <th>画像アップロード</th>
+                    <td><input type="file" id="image-file" accept="image/*"></td>
                 </tr>
                 <tr>
                     <th>YouTube ID</th>
@@ -170,22 +182,20 @@
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
-  apiKey: "AIzaSyDQDL4MoMnXFX9CQ_iA00Q7HJETID_ZDLk",
-  authDomain: "mediatest-v01c-f9bea.firebaseapp.com",
-  projectId: "mediatest-v01c-f9bea",
-  storageBucket: "mediatest-v01c-f9bea.firebasestorage.app",
-  messagingSenderId: "1074645734117",
-  appId: "1:1074645734117:web:56ee5b96c3209ea9f23a0c",
-  measurementId: "G-FKT8FYDQ1D"
-};
+            apiKey: "AIzaSyDQDL4MoMnXFX9CQ_iA00Q7HJETID_ZDLk",
+            authDomain: "mediatest-v01c-f9bea.firebaseapp.com",
+            projectId: "mediatest-v01c-f9bea",
+            storageBucket: "mediatest-v01c-f9bea.firebasestorage.app",
+            messagingSenderId: "1074645734117",
+            appId: "1:1074645734117:web:56ee5b96c3209ea9f23a0c",
+            measurementId: "G-FKT8FYDQ1D"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // 保存先のコレクション名（わかりやすく 'news' としています）
         const newsCollectionPath = "news";
-
         const btn = document.getElementById('submit-btn');
         let isReady = false;
 
@@ -194,7 +204,6 @@
             document.getElementById('msg-box').style.display = 'block';
         }
 
-        // 認証状態の監視
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 isReady = true;
@@ -207,33 +216,74 @@
             }
         });
 
-        // 匿名認証でログイン（※Firestoreルールで要許可）
         signInAnonymously(auth).catch((error) => {
             console.error("認証エラー:", error);
             showMessage("Firebaseの認証に失敗しました。設定を確認してください。");
         });
 
+        // --- 追加: 画像を圧縮して文字データ(Base64)にする関数 ---
+        function compressImageAndGetBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; // 最大幅を800pxに制限（容量オーバーを防ぐため）
+                        let newWidth = img.width;
+                        let newHeight = img.height;
+                        
+                        if (newWidth > MAX_WIDTH) {
+                            newHeight = Math.floor(newHeight * (MAX_WIDTH / newWidth));
+                            newWidth = MAX_WIDTH;
+                        }
+                        
+                        canvas.width = newWidth;
+                        canvas.height = newHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                        
+                        // 画質を少し落としてJPEG形式の文字データとして出力
+                        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+                    }
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
         document.getElementById('news-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!isReady) return showMessage("データベースの準備ができていません。");
-
+            
             btn.disabled = true; 
-            btn.innerText = "送信中...";
 
             try {
+                let finalImageUrl = document.getElementById('image-url').value;
+                const imageFile = document.getElementById('image-file').files[0];
+
+                // ファイルがある場合はStorageを使わず、文字データ(Base64)にして直接Firestoreへ
+                if (imageFile) {
+                    btn.innerText = "画像処理中...";
+                    finalImageUrl = await compressImageAndGetBase64(imageFile);
+                }
+
+                btn.innerText = "送信中...";
+
                 await addDoc(collection(db, newsCollectionPath), {
                     title: document.getElementById('title').value,
                     category: document.getElementById('category').value,
                     isRecommended: document.getElementById('is-recommended').checked,
                     content: document.getElementById('content').value,
-                    imageUrl: document.getElementById('image-url').value || null,
+                    imageUrl: finalImageUrl || null,
                     youtubeId: document.getElementById('youtube-id').value || null,
                     createdAt: Date.now()
                 });
-                showMessage("★カキコ完了しました！★");
+                showMessage("カキコ完了しました！");
                 document.getElementById('news-form').reset();
             } catch (error) {
-                // ここでエラーが出る場合はFirestoreのセキュリティルールが原因の可能性が高いです
                 showMessage("送信エラー: 権限がないか設定が間違っています。(" + error.message + ")");
                 console.error("Firestore Add Error:", error);
             } finally {
