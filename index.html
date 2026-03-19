@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>◆◇◆ ニュース管理室 v2.0 ◆◇◆</title>
+    <title>Aero News - 管理・投稿画面</title>
     <style>
-        /* 2000年代の個人ホームページ風デザイン */
+        /* =========================================
+           管理モード用スタイル (2000年代風)
+           ========================================= */
         body {
             background-color: #000080;
             background-image: radial-gradient(white 1px, transparent 1px);
@@ -14,84 +16,107 @@
             font-family: "MS P Gothic", "ＭＳ Ｐゴシック", sans-serif;
             text-align: center;
             margin: 0;
-            padding: 20px;
+            padding: 20px 0;
+            min-height: 100vh;
         }
-        h1 {
+        
+        h1.admin-title {
             color: #00ffff;
             text-shadow: 2px 2px 0px #000000;
             border-bottom: 3px double #00ffff;
             display: inline-block;
-        }
-        marquee {
-            background-color: #ff00ff;
-            color: #ffffff;
-            font-weight: bold;
-            padding: 5px;
+            font-size: 24px;
             margin-bottom: 20px;
-            width: 80%;
+        }
+        
+        marquee {
+            background-color: #ff00ff; 
+            color: #ffffff; 
+            font-weight: bold;
+            padding: 5px; 
+            margin-bottom: 20px; 
+            width: 80%; 
             border: 2px outset #ffffff;
         }
-        .container {
-            width: 90%;
-            max-width: 650px;
+        
+        .admin-container {
+            width: 90%; 
+            max-width: 650px; 
             margin: 0 auto;
-            background-color: #c0c0c0;
+            background-color: #c0c0c0; 
             color: #000000;
-            border: 4px outset #ffffff;
-            padding: 15px;
+            border: 4px outset #ffffff; 
+            padding: 15px; 
             text-align: left;
         }
+        
         table { width: 100%; border-collapse: collapse; }
+        
         th {
-            background-color: #000080;
-            color: #ffffff;
+            background-color: #000080; 
+            color: #ffffff; 
             padding: 8px;
-            border: 2px inset #ffffff;
+            border: 2px inset #ffffff; 
             width: 30%;
         }
+        
         td {
-            padding: 8px;
-            border: 2px inset #ffffff;
+            padding: 8px; 
+            border: 2px inset #ffffff; 
             background-color: #ffffff;
         }
+        
         input[type="text"], textarea, select {
-            width: 95%;
-            padding: 4px;
+            width: 95%; 
+            padding: 4px; 
             border: 2px inset #c0c0c0;
             font-family: "MS P Gothic", sans-serif;
         }
+        
         .btn-submit {
-            background-color: #c0c0c0;
+            background-color: #c0c0c0; 
             border: 3px outset #ffffff;
-            padding: 10px 20px;
-            font-weight: bold;
+            padding: 10px 20px; 
+            font-weight: bold; 
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 15px; 
             width: 100%;
         }
+        
         .btn-submit:active { border-style: inset; }
-        .footer { margin-top: 30px; font-size: 12px; color: #00ffff; }
-        .counter {
-            background-color: #000; color: #0f0; font-family: monospace;
-            padding: 2px 5px; border: 2px inset #888; letter-spacing: 3px;
-        }
+        
         /* カスタムメッセージボックス */
         #msg-box {
-            display: none; position: fixed; top: 50%; left: 50%;
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%;
             transform: translate(-50%, -50%);
-            background: #c0c0c0; border: 3px outset #fff;
-            padding: 20px; color: #000; z-index: 1000; text-align: center;
+            background: #c0c0c0; 
+            border: 3px outset #fff;
+            padding: 20px; 
+            color: #000; 
+            z-index: 1000; 
+            text-align: center;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
         }
-        #msg-box button { border: 2px outset #fff; background: #c0c0c0; cursor: pointer; margin-top: 10px; }
+        
+        #msg-box button { 
+            border: 2px outset #fff; 
+            background: #c0c0c0; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            padding: 5px 15px; 
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
     <marquee scrollamount="5">☆★☆ カテゴリーとおすすめ機能を追加しました！(v2.0) ☆★☆</marquee>
+    <h1 class="admin-title">◆◇◆ ニュース投稿フォーム ◆◇◆</h1>
 
-    <h1>◆◇◆ ニュース投稿フォーム ◆◇◆</h1>
-
-    <div class="container">
+    <div class="admin-container">
         <form id="news-form">
             <table>
                 <tr>
@@ -134,35 +159,33 @@
             <button type="submit" class="btn-submit">カキコする (送信)</button>
         </form>
     </div>
-
-    <div id="msg-box">
-        <p id="msg-text"></p>
-        <button onclick="document.getElementById('msg-box').style.display='none'">OK</button>
-    </div>
-
-    <div class="footer">
-        <p>あなたは <span class="counter">0010025</span> 人目の訪問者です。</p>
+    <div style="margin-top: 30px; font-size: 12px; color: #00ffff;">
         <p>Copyright (C) 200X News Admin. All Rights Reserved.</p>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- 管理画面用メッセージボックス -->
+    <div id="msg-box">
+        <p id="msg-text" style="margin: 0; font-weight: bold;"></p>
+        <button onclick="document.getElementById('msg-box').style.display='none'">OK</button>
+    </div>
+
+    <!-- Firebase SDK (ES Modules) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-  apiKey: "AIzaSyAcYxXbssrZmx0e8-9e2qy2C6ftX-X8ijg",
-  authDomain: "mediatest-v01c.firebaseapp.com",
-  projectId: "mediatest-v01c",
-  storageBucket: "mediatest-v01c.firebasestorage.app",
-  messagingSenderId: "1008340252538",
-  appId: "1:1008340252538:web:4b4613e10647053fc2c8c3",
-  measurementId: "G-GP9YH6WSJP"
-};
+        let firebaseConfig = {
+            apiKey: "AIzaSyAcYxXbssrZmx0e8-9e2qy2C6ftX-X8ijg",
+            authDomain: "mediatest-v01c.firebaseapp.com",
+            projectId: "mediatest-v01c",
+            storageBucket: "mediatest-v01c.firebasestorage.app",
+            messagingSenderId: "1008340252538",
+            appId: "1:1008340252538:web:4b4613e10647053fc2c8c3",
+            measurementId: "G-GP9YH6WSJP"
+        };
 
-        let firebaseConfig = defaultFirebaseConfig;
-        if (typeof __firebase_config !== 'undefined') {
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             firebaseConfig = JSON.parse(__firebase_config);
         }
 
@@ -171,32 +194,16 @@
         const db = getFirestore(app);
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-custom-news';
-        const newsCollectionPath = typeof __app_id !== 'undefined' 
-            ? `artifacts/${appId}/public/data/news` 
-            : 'news';
+        const newsCollectionPath = `artifacts/${appId}/public/data/news`;
 
         function showMessage(text) {
             document.getElementById('msg-text').innerText = text;
             document.getElementById('msg-box').style.display = 'block';
         }
 
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const { signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                showMessage("認証に失敗しました。");
-            }
-        }
-        initAuth();
-
         document.getElementById('news-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!auth.currentUser) return showMessage("認証待ちです。");
+            if (!auth.currentUser) return showMessage("認証待ちです。少し待ってからお試しください。");
 
             const title = document.getElementById('title').value;
             const category = document.getElementById('category').value;
@@ -206,26 +213,45 @@
             const youtubeId = document.getElementById('youtube-id').value;
             const btn = document.querySelector('.btn-submit');
 
-            btn.disabled = true; btn.innerText = "送信中...";
+            btn.disabled = true; 
+            btn.innerText = "送信中...";
 
             try {
                 await addDoc(collection(db, newsCollectionPath), {
                     title: title,
-                    category: category,           // ★追加: カテゴリー
-                    isRecommended: isRecommended, // ★追加: おすすめフラグ
+                    category: category,
+                    isRecommended: isRecommended,
                     content: content,
                     imageUrl: imageUrl || null,
                     youtubeId: youtubeId || null,
                     createdAt: Date.now()
                 });
-                showMessage("★カキコ完了しました！★");
+                showMessage("★カキコ完了しました！閲覧画面に戻って確認してください。★");
                 document.getElementById('news-form').reset();
             } catch (error) {
-                showMessage("エラー: " + error.message);
+                showMessage("エラーが発生しました: " + error.message);
+                console.error("Firestore Add Error:", error);
             } finally {
-                btn.disabled = false; btn.innerText = "カキコする (送信)";
+                btn.disabled = false; 
+                btn.innerText = "カキコする (送信)";
             }
         });
+
+        async function init() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const { signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("認証エラー:", error);
+                showMessage("システムに接続できませんでした。");
+            }
+        }
+
+        init();
     </script>
 </body>
 </html>
