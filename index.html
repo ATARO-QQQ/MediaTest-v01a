@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aero News - 管理・投稿画面</title>
     <style>
-        /* =========================================
-           管理モード用スタイル (2000年代風)
-           ========================================= */
         body {
             background-color: #000080;
             background-image: radial-gradient(white 1px, transparent 1px);
@@ -34,9 +31,10 @@
             color: #ffffff; 
             font-weight: bold;
             padding: 5px; 
-            margin-bottom: 20px; 
             width: 80%; 
             border: 2px outset #ffffff;
+            display: block;
+            margin: 0 auto 20px auto; 
         }
         
         .admin-container {
@@ -71,13 +69,11 @@
             padding: 4px; 
             border: 2px inset #c0c0c0;
             font-family: "MS P Gothic", sans-serif;
+            box-sizing: border-box;
         }
 
         input[type="file"] {
-            width: 95%;
-            padding: 4px;
-            background-color: #ffffff;
-            border: 2px inset #c0c0c0;
+            font-family: "MS P Gothic", sans-serif;
         }
         
         .btn-submit {
@@ -92,7 +88,6 @@
         
         .btn-submit:active { border-style: inset; }
         
-        /* カスタムメッセージボックス */
         #msg-box {
             display: none; 
             position: fixed; 
@@ -119,8 +114,9 @@
     </style>
 </head>
 <body>
-    <marquee scrollamount="5">管理画面 - ニュースを登録してください</marquee>
-    <h1 class="admin-title">ニュース投稿フォーム</h1>
+    <marquee scrollamount="5">☆★☆ 管理画面 - ニュースを登録してください ☆★☆</marquee>
+
+    <h1 class="admin-title">◆◇◆ ニュース投稿フォーム ◆◇◆</h1>
 
     <div class="admin-container">
         <form id="news-form">
@@ -141,11 +137,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>目立たせる</th>
+                    <th>目立たせる！</th>
                     <td>
                         <label>
                             <input type="checkbox" id="is-recommended" style="width: auto;"> 
-                            <b>「ピックアップ」欄に表示する</b>
+                            <b>✨「ピックアップ」欄に表示する</b>
                         </label>
                     </td>
                 </tr>
@@ -159,18 +155,18 @@
                 </tr>
                 <tr>
                     <th>画像アップロード</th>
-                    <td><input type="file" id="image-file" accept="image/*"></td>
+                    <td><input type="file" id="image-file" accept="image/*" style="width: auto;"></td>
                 </tr>
                 <tr>
                     <th>YouTube ID</th>
                     <td><input type="text" id="youtube-id" placeholder="例: dQw4w9WgXcQ (動画がある場合)"></td>
                 </tr>
             </table>
+
             <button type="submit" class="btn-submit" id="submit-btn" disabled>データベース接続中...</button>
         </form>
     </div>
 
-    <!-- 管理画面用メッセージボックス -->
     <div id="msg-box">
         <p id="msg-text" style="margin: 0; font-weight: bold;"></p>
         <button onclick="document.getElementById('msg-box').style.display='none'">OK</button>
@@ -221,7 +217,6 @@
             showMessage("Firebaseの認証に失敗しました。設定を確認してください。");
         });
 
-        // --- 追加: 画像を圧縮して文字データ(Base64)にする関数 ---
         function compressImageAndGetBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -231,7 +226,7 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // 最大幅を800pxに制限（容量オーバーを防ぐため）
+                        const MAX_WIDTH = 800;
                         let newWidth = img.width;
                         let newHeight = img.height;
                         
@@ -245,7 +240,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, newWidth, newHeight);
                         
-                        // 画質を少し落としてJPEG形式の文字データとして出力
                         resolve(canvas.toDataURL('image/jpeg', 0.7)); 
                     }
                     img.onerror = error => reject(error);
@@ -264,7 +258,6 @@
                 let finalImageUrl = document.getElementById('image-url').value;
                 const imageFile = document.getElementById('image-file').files[0];
 
-                // ファイルがある場合はStorageを使わず、文字データ(Base64)にして直接Firestoreへ
                 if (imageFile) {
                     btn.innerText = "画像処理中...";
                     finalImageUrl = await compressImageAndGetBase64(imageFile);
@@ -281,14 +274,14 @@
                     youtubeId: document.getElementById('youtube-id').value || null,
                     createdAt: Date.now()
                 });
-                showMessage("カキコ完了しました！");
+                showMessage("★カキコ完了しました！★");
                 document.getElementById('news-form').reset();
             } catch (error) {
                 showMessage("送信エラー: 権限がないか設定が間違っています。(" + error.message + ")");
                 console.error("Firestore Add Error:", error);
             } finally {
                 btn.disabled = false; 
-                btn.innerText = "カキコする (送信)";
+                btn.innerText = "アップロード";
             }
         });
     </script>
